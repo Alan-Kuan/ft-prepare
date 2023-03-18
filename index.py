@@ -194,6 +194,9 @@ def convert():
     with open('output.json', 'w', encoding='utf8') as f:
         json.dump(converted_data, f, ensure_ascii=False)
 
+    if os.path.isfile('output_prepared.jsonl'):
+        os.remove('output_prepared.jsonl')
+
     os.system('yes | openai tools fine_tunes.prepare_data -f output.json')
 
     final_data = ''
