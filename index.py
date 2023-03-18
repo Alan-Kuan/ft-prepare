@@ -4,6 +4,8 @@ import requests
 import json
 import os
 
+from prepare import apply_remediations
+
 app_name = 'ft-prepare'
 
 st.set_page_config(
@@ -191,19 +193,7 @@ def convert():
                 'completion': qna_set['answer']
             })
 
-    with open('output.json', 'w', encoding='utf8') as f:
-        json.dump(converted_data, f, ensure_ascii=False)
-
-    if os.path.isfile('output_prepared.jsonl'):
-        os.remove('output_prepared.jsonl')
-
-    os.system('yes | openai tools fine_tunes.prepare_data -f output.json')
-
-    final_data = ''
-    with open('output_prepared.jsonl', 'r') as f:
-        for line in f:
-            final_data += line
-
+    final_data = apply_remediations(converted_data)
     st.session_state['converted_qnas'] = final_data
     alert('convert_alert', 'success', 'Converted')
 
