@@ -51,9 +51,10 @@ def alert(alert_loc, alert_type, alert_msg):
 def get_parse_status(job_id):
     res = req.get(f'sources/jobs/{job_id}')
     if not res.ok:
-        return False, res.reason
+        return 0, res.reason
     data = res.json()
-    return True, data['status']
+    status_code = 2 if data['status'] == 'succeeded' else 1
+    return status_code, data['status']
 
 # Credentials
 # -------------------------------------- #
@@ -88,8 +89,8 @@ def parse_qna():
     if 'job_id' in st.session_state:
         job_id = st.session_state['job_id']
         if job_id != '':
-            succ, _ = get_parse_status(job_id)
-            if not succ:
+            status_code, _ = get_parse_status(job_id)
+            if status_code == 0:
                 alert('parse_alert', 'error', 'Still handling previous request')
                 return
 
@@ -127,9 +128,14 @@ def check_status():
         alert('parse_alert', 'error', 'Have not sent any request!')
         return
     job_id = st.session_state['job_id']
-    succ, ret = get_parse_status(job_id)
-    alert_type = 'info' if succ else 'error'
-    alert('parse_alert', alert_type, ret)
+    status_code, status_msg = get_parse_status(job_id)
+    if status_code == 0:
+        alert_type = 'error'
+    elif status_code == 1:
+        alert_type = 'info'
+    else:
+        alert_type = 'success'
+    alert('parse_alert', alert_type, status_msg)
 
 st.button('Status', on_click=check_status)
 
@@ -144,12 +150,12 @@ if 'convert_alert' in st.session_state:
 def fetch():
     if 'job_id' in st.session_state:
         job_id = st.session_state['job_id']
-        succ, ret = get_parse_status(job_id)
+        status_code, status_msg = get_parse_status(job_id)
 
-        if not succ:
-            alert('convert_alert', 'error', ret)
+        if status_code == 0:
+            alert('convert_alert', 'error', status_msg)
             return
-        if ret != 'succeeded':
+        elif status_code == 1:
             alert('convert_alert', 'warning', 'Still handling previous request')
             return
 
@@ -160,6 +166,7 @@ def fetch():
         return
 
     st.session_state['origin_qnas'] = res.json()
+    alert('convert_alert', 'success', 'Fetched')
 
 st.button('Fetch', on_click=fetch)
 
@@ -195,6 +202,7 @@ def convert():
             final_data += line
 
     st.session_state['converted_qnas'] = final_data
+    alert('convert_alert', 'success', 'Converted')
 
 st.button('Convert', on_click=convert)
 
