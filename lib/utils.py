@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum
 import streamlit as st
 import requests
 
@@ -35,11 +36,21 @@ def alert(alert_loc, alert_type, alert_msg):
         'msg': alert_msg
     }
 
+class ParseStatus(Enum):
+    ERROR = 0
+    PROCESSING = 1
+    SUCCESS = 2
+
 def get_parse_status(job_id, req):
     res = req.get(f'sources/jobs/{job_id}')
     if not res.ok:
-        return 0, res.reason
+        return ParseStatus.ERROR, res.reason
+
     data = res.json()
-    status_code = 2 if data['status'] == 'succeeded' else 1
+    if data['status'] == 'succeeded':
+        status_code = ParseStatus.SUCCESS
+    else:
+        status_code = ParseStatus.PROCESSING
+
     return status_code, data['status']
 

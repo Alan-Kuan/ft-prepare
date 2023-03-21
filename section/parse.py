@@ -1,5 +1,5 @@
 import streamlit as st
-from lib.utils import get_parse_status, display_alert, alert
+from lib.utils import ParseStatus, get_parse_status, display_alert, alert
 
 def ParseSection(title, req):
     st.header(title)
@@ -19,7 +19,7 @@ def parse_qna(qna_url, display_name, req):
     job_id = st.session_state.get('job_id')
     if job_id is not None:
         status_code, _ = get_parse_status(job_id, req)
-        if status_code == 0:
+        if status_code != ParseStatus.SUCCESS:
             alert('parse_alert', 'error', 'Still handling previous request')
             return
 
@@ -56,9 +56,9 @@ def check_status(req):
         return
 
     status_code, status_msg = get_parse_status(job_id, req)
-    if status_code == 0:
+    if status_code == ParseStatus.ERROR:
         alert_type = 'error'
-    elif status_code == 1:
+    elif status_code == ParseStatus.PROCESSING:
         alert_type = 'info'
     else:
         alert_type = 'success'

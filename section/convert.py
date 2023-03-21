@@ -1,6 +1,6 @@
 import streamlit as st
 from lib.prepare import apply_remediations
-from lib.utils import get_parse_status, display_alert, alert
+from lib.utils import ParseStatus, get_parse_status, display_alert, alert
 
 def ConvertSection(title, qna_url, req):
     st.header(title)
@@ -40,10 +40,10 @@ def fetch(qna_url, req):
     if job_id is not None:
         status_code, status_msg = get_parse_status(job_id, req)
 
-        if status_code == 0:
+        if status_code == ParseStatus.ERROR:
             alert('convert_alert', 'error', status_msg)
             return
-        elif status_code == 1:
+        elif status_code == ParseStatus.PROCESSING:
             alert('convert_alert', 'warning', 'Still handling previous request')
             return
 
